@@ -1,4 +1,6 @@
-﻿namespace EasyContainer
+﻿using System;
+
+namespace EasyContainer
 {
     public interface IBar
     {

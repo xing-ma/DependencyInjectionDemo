@@ -5,6 +5,7 @@
 
     }
 
+    [MapTo(typeof(IQux), Lifetime.Root)]
     public class Qux : Base, IQux
     {
     }
