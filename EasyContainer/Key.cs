@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace EasyContainer
@@ -22,13 +23,7 @@ namespace EasyContainer
             if (genericArguments.Length != other.genericArguments.Length)
                 return false;
 
-            for (var i = 0; i < genericArguments.Length; i++)
-            {
-                if (genericArguments[i] != other.genericArguments[i])
-                    return false;
-            }
-
-            return true;
+            return !genericArguments.Where((t, i) => t != other.genericArguments[i]).Any();
         }
 
         public override int GetHashCode()
@@ -43,6 +38,6 @@ namespace EasyContainer
             return hashCode;
         }
 
-        public override bool Equals(object obj) => obj is Key key ? Equals(key) : false;
+        public override bool Equals(object obj) => obj is Key key && Equals(key);
     }
 }

@@ -60,7 +60,7 @@ namespace EasyContainer
                 default:
                     var service = registry.Factory(this, genericArguments);
 
-                    if(service is IDisposable disposable  && disposable != this)
+                    if(service is IDisposable disposable  && !Equals(disposable, this))
                     {
                         _disposables.Add(disposable);
                     }
@@ -113,38 +113,40 @@ namespace EasyContainer
 
             ServiceRegistry registry;
 
-            if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition()==
-                typeof(IEnumerable<>))
+            switch (serviceType.IsGenericType)
             {
-                var elementType = serviceType.GetGenericArguments()[0];
-
-                if(!_registers.TryGetValue(elementType, out registry))
+                case true when serviceType.GetGenericTypeDefinition()==
+                               typeof(IEnumerable<>):
                 {
-                    return Array.CreateInstance(elementType, 0);
+                    var elementType = serviceType.GetGenericArguments()[0];
+
+                    if(!_registers.TryGetValue(elementType, out registry))
+                    {
+                        return Array.CreateInstance(elementType, 0);
+                    }
+
+                    var registrys = registry.AsEnumerable();
+
+                    var services = registrys.Select(it =>
+                        GetServiceCore(it, Type.EmptyTypes)).ToArray();
+
+                    var array = Array.CreateInstance(elementType, services.Length);
+                    services.CopyTo(array, 0);
+                    return array;
                 }
+                case true when !_registers.ContainsKey(serviceType):
+                {
+                    var definition = serviceType.GetGenericTypeDefinition();
 
-                var registrys = registry.AsEnumerable();
-
-                var services = registrys.Select(it =>
-                GetServiceCore(it, Type.EmptyTypes)).ToArray();
-
-                var array = Array.CreateInstance(elementType, services.Length);
-                services.CopyTo(array, 0);
-                return array;
+                    return _registers.TryGetValue(definition, out registry)
+                        ? GetServiceCore(registry, serviceType.GetGenericArguments())
+                        : null;
+                }
+                default:
+                    return _registers.TryGetValue(serviceType, out registry)
+                        ? GetServiceCore(registry, new Type[0])
+                        : null;
             }
-
-            if (serviceType.IsGenericType && !_registers.ContainsKey(serviceType))
-            {
-                var definition = serviceType.GetGenericTypeDefinition();
-
-                return _registers.TryGetValue(definition, out registry)
-                    ? GetServiceCore(registry, serviceType.GetGenericArguments())
-                    : null;
-            }
-
-            return _registers.TryGetValue(serviceType, out registry)
-                ? GetServiceCore(registry, new Type[0])
-                : null;
         }
 
         private void EnsureNotDisposed()

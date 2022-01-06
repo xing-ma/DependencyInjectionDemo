@@ -100,18 +100,18 @@ namespace EasyContainer
 
             constructor ??= constructors.First();
 
-            var paraments = constructor.GetParameters();
+            var parameters = constructor.GetParameters();
 
-            if(paraments.Length == 0)
+            if(parameters.Length == 0)
             {
                 return Activator.CreateInstance(type);
             }
 
-            var arguments = new object[paraments.Length];
+            var arguments = new object[parameters.Length];
 
             for (var index = 0; index < arguments.Length; index++)
             {
-                arguments[index] = container.GetService(paraments[index].ParameterType);
+                arguments[index] = container.GetService(parameters[index].ParameterType);
             }
 
             return constructor.Invoke(arguments);
